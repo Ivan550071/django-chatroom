@@ -1,4 +1,4 @@
-# 🚀 Django Chatroom - Docker Setup
+# Django Chatroom - Docker Setup
 
 A real-time chat application built with Django, featuring user authentication, profiles, AJAX messaging, and more.
 
