@@ -1,0 +1,159 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ room_name }} - Chat</title>
+    <link rel="stylesheet" href="{% static 'chat/styles.css' %}">
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="{% url 'index' %}" class="logo">💬 Chatroom</a>
+            <div class="nav-right">
+                <button id="theme-toggle" class="nav-link" aria-label="Toggle theme">🌙</button>
+                <span class="user-info">{{ request.user.username }}</span>
+                <a href="{% url 'profile' %}" class="nav-link">👤 Profile</a>
+                <a href="{% url 'logout' %}" class="nav-link logout-link">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="chat-container">
+        <header class="chat-header">
+            <div class="header-content">
+                <a href="{% url 'index' %}" class="back-link">← Back to Chatrooms</a>
+                <h1>{{ room_name }}</h1>
+            </div>
+        </header>
+
+        <main class="chat-main">
+            <div id="messages" class="messages-container">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="message" data-message-id="{{ message.id }}">
+                            <div class="message-header">
+                                <span class="username">{{ message.user.username }}</span>
+                                <span class="timestamp">{{ message.timestamp|date:"H:i:s" }}</span>
+                            </div>
+                            <div class="message-content">{{ message.content }}</div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <p class="no-messages">No messages yet. Be the first to chat!</p>
+                {% endif %}
+            </div>
+        </main>
+
+        <footer class="chat-footer">
+            <form id="message-form" class="message-form" method="POST" action="{% url 'send_message' room_name %}">
+                {% csrf_token %}
+                <div class="input-group">
+                    <input 
+                        type="text" 
+                        id="message-input"
+                        name="content"
+                        placeholder="Type your message..." 
+                        required
+                        class="input-field"
+                    >
+                    <button type="submit" class="btn btn-primary">Send</button>
+                </div>
+            </form>
+        </footer>
+    </div>
+
+    <script>
+        // Auto-scroll to bottom
+        const messagesContainer = document.getElementById('messages');
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        // AJAX message submission (falls back to normal POST if fetch fails)
+        const form = document.getElementById('message-form');
+        form.addEventListener('submit', async function onSubmit(e) {
+            e.preventDefault();
+
+            const input = document.getElementById('message-input');
+            const content = input.value.trim();
+            if (!content) return;
+
+            const url = form.action;
+            const formData = new FormData(form);
+
+            try {
+                const resp = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'X-Requested-With': 'XMLHttpRequest' },
+                    body: formData,
+                    credentials: 'same-origin'
+                });
+
+                if (!resp.ok) throw new Error('Network response was not ok');
+
+                const data = await resp.json();
+
+                // render the new message
+                const messageDiv = document.createElement('div');
+                messageDiv.className = 'message';
+                messageDiv.setAttribute('data-message-id', data.id);
+                messageDiv.innerHTML = `
+                    <div class="message-header">
+                        <span class="username">${data.user}</span>
+                        <span class="timestamp">${new Date(data.timestamp).toLocaleTimeString()}</span>
+                    </div>
+                    <div class="message-content"></div>
+                `;
+                messageDiv.querySelector('.message-content').textContent = data.content;
+
+                messagesContainer.appendChild(messageDiv);
+                input.value = '';
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            } catch (err) {
+                // fallback: submit the form normally
+                form.removeEventListener('submit', onSubmit);
+                form.submit();
+            }
+        });
+    </script>
+    <script>
+        (function(){
+            const initialTheme = ("{{ request.user.profile.theme|default:'light' }}").trim();
+            const root = document.documentElement;
+            function applyTheme(theme){
+                if(theme === 'dark') root.classList.add('theme-dark'); else root.classList.remove('theme-dark');
+                const btn = document.getElementById('theme-toggle');
+                if(btn) btn.textContent = theme === 'dark' ? '☀️' : '🌙';
+            }
+            applyTheme(initialTheme);
+
+            function getCookie(name){
+                const v = document.cookie.match('(^|;)\\s*'+name+'\\s*=\\s*([^;]+)');
+                return v ? v.pop() : '';
+            }
+
+            const btn = document.getElementById('theme-toggle');
+            if(btn){
+                btn.addEventListener('click', async function(){
+                    try{
+                        const resp = await fetch("{% url 'toggle_theme' %}",{
+                            method:'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken'),
+                                'X-Requested-With': 'XMLHttpRequest'
+                            },
+                            credentials: 'same-origin'
+                        });
+                        if(!resp.ok) throw new Error('Network');
+                        const data = await resp.json();
+                        applyTheme(data.theme);
+                    }catch(e){
+                        console.error('Theme toggle failed', e);
+                    }
+                });
+            }
+        })();
+    </script>
+</body>
+</html>

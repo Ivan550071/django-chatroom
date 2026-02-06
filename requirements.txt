@@ -1,0 +1,8 @@
+﻿Django>=5.2,<6.0
+djangorestframework
+channels
+Pillow
+gunicorn
+whitenoise
+dj-database-url
+psycopg2-binary

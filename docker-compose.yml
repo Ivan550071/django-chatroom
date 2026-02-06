@@ -1,0 +1,47 @@
+version: '3.9'
+
+services:
+  # Django web application
+  web:
+    build: .
+    container_name: django_chatroom
+    command: >
+      sh -c "python manage.py collectstatic --noinput &&
+             python manage.py migrate &&
+             gunicorn --bind 0.0.0.0:8000 --workers 4 chatroom.wsgi:application"
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=0
+      - SECRET_KEY=your-secret-key-change-this-in-production
+      - ALLOWED_HOSTS=localhost,127.0.0.1,0.0.0.0,web
+      - DATABASE_URL=postgresql://chatroom_user:changeme123@db:5432/chatroom
+    volumes:
+      - .:/app
+      - static_volume:/app/staticfiles
+    depends_on:
+      - db
+    networks:
+      - chatroom_network
+
+  # Database service (SQLite runs in container, but you can swap for PostgreSQL)
+  db:
+    image: postgres:15-alpine
+    container_name: chatroom_db
+    environment:
+      - POSTGRES_DB=chatroom
+      - POSTGRES_USER=chatroom_user
+      - POSTGRES_PASSWORD=changeme123
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - chatroom_network
+    # Comment out if using SQLite instead
+
+volumes:
+  postgres_data:
+  static_volume:
+
+networks:
+  chatroom_network:
+    driver: bridge
