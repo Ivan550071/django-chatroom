@@ -76,3 +76,7 @@ These are set in `docker-compose.yml`. For production, prefer a `.env` file or C
 docker compose down -v
 docker compose up --build --force-recreate
 ```
+
+## License
+
+MIT

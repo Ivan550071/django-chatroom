@@ -13,13 +13,25 @@ git clone <your-repo-url>
 cd django-chatroom
 ```
 
-2. Build and start:
+2. Create your environment file:
+
+```bash
+cp .env.example .env
+```
+
+Generate a new Django secret key and paste it into `.env`:
+
+```bash
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```
+
+3. Build and start:
 
 ```bash
 docker compose up --build
 ```
 
-3. Open your browser to `http://localhost:8000`.
+4. Open your browser to `http://localhost:8000`.
 
 Notes: the compose setup starts a Postgres service, runs migrations and collects static files.
 
@@ -51,7 +63,7 @@ Open `http://127.0.0.1:8000`.
 - `ALLOWED_HOSTS` — comma-separated hosts (default: `localhost,127.0.0.1`)
 - `DATABASE_URL` — optional (Postgres URL when not using default SQLite)
 
-For Docker, these are defined in `docker-compose.yml`.
+For Docker, these are loaded from `.env`.
 
 ## Docker-specific notes
 
