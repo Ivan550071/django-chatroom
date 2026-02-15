@@ -98,7 +98,7 @@
             if(btn){
                 btn.addEventListener('click', async function(){
                     try{
-                        const resp = await fetch('{% url 'toggle_theme' %}',{
+                        const resp = await fetch("{% url 'toggle_theme' %}",{
                             method:'POST',
                             headers: {
                                 'X-CSRFToken': getCookie('csrftoken'),
