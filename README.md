@@ -82,12 +82,6 @@ docker compose down
 
 See [DOCKER_README.md](DOCKER_README.md) for detailed Docker instructions and troubleshooting tips.
 
-## Contributing
-
-1. Fork the repo
-2. Create a feature branch
-3. Open a pull request
-
 ## License
 
 MIT
